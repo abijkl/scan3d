@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Uji Kamera dan Gyro</title>
+<title>Scan 3D</title>
 <style>
   :root {
     --bg: #eef2f4;
@@ -13,34 +13,18 @@
     --accent-ink: #ffffff;
     --card: #ffffff;
     --line: #c6d2d8;
-    --err: #a3341f;
     box-sizing: border-box;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0d1a22;
-      --ink: #e8f1f4;
-      --muted: #9db3bd;
-      --accent: #6fe0f2;
-      --accent-ink: #062029;
-      --card: #14262f;
-      --line: #28404c;
-      --err: #ff9b86;
+      --bg: #0d1a22; --ink: #e8f1f4; --muted: #9db3bd;
+      --accent: #6fe0f2; --accent-ink: #062029; --card: #14262f; --line: #28404c;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0d1a22;
-    --ink: #e8f1f4;
-    --muted: #9db3bd;
-    --accent: #6fe0f2;
-    --accent-ink: #062029;
-    --card: #14262f;
-    --line: #28404c;
-    --err: #ff9b86;
+    --bg: #0d1a22; --ink: #e8f1f4; --muted: #9db3bd;
+    --accent: #6fe0f2; --accent-ink: #062029; --card: #14262f; --line: #28404c;
   }
-  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   html, body { height: 100%; margin: 0; }
   *, *::before, *::after { box-sizing: inherit; }
   body {
@@ -53,67 +37,53 @@
   /* ---------- Layar awal ---------- */
   .start {
     min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: flex; flex-direction: column; justify-content: center;
     gap: 20px;
     padding: 28px 24px;
-    max-width: 480px;
-    margin: 0 auto;
+    max-width: 480px; margin: 0 auto;
   }
   .start h1 { font-size: 1.7rem; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
   .start p { margin: 0; color: var(--muted); line-height: 1.55; font-size: 1rem; }
   .checks { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
   .checks li {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 12px 14px;
-    line-height: 1.45;
-    font-size: 0.95rem;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; line-height: 1.45; font-size: 0.95rem;
   }
   .checks b { display: block; margin-bottom: 2px; }
   .btn {
-    appearance: none;
-    border: 0;
-    border-radius: 14px;
-    background: var(--accent);
-    color: var(--accent-ink);
-    font: inherit;
-    font-weight: 650;
-    font-size: 1.05rem;
-    padding: 16px 20px;
-    cursor: pointer;
-    width: 100%;
+    appearance: none; border: 0; border-radius: 14px;
+    background: var(--accent); color: var(--accent-ink);
+    font: inherit; font-weight: 650; font-size: 1.05rem;
+    padding: 16px 20px; cursor: pointer; width: 100%;
   }
-  .btn:focus-visible, .ghost:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
   .btn:disabled { opacity: 0.6; }
+  button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 
   /* ---------- Layar pemindai ---------- */
   #app { position: fixed; inset: 0; background: #05090c; display: none; }
   #app.on { display: block; }
   video {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    background: #05090c;
-    visibility: hidden;
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; background: #05090c; visibility: hidden;
   }
   video.live { visibility: visible; }
+  #flash {
+    position: absolute; inset: 0; background: #fff; opacity: 0;
+    pointer-events: none; transition: opacity 0.3s ease-out;
+  }
+  #flash.on { opacity: 0.5; transition: none; }
+  @media (prefers-reduced-motion: reduce) { #flash { display: none; } }
+
   .hud-top {
     position: absolute; left: 0; right: 0; top: 0;
     padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 0;
-    display: flex; flex-wrap: wrap; gap: 8px;
-    pointer-events: none;
+    display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none;
   }
   .chip {
     background: rgba(8, 20, 28, 0.72);
     -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-    color: #f2f7f9;
-    border-radius: 999px;
-    padding: 7px 12px;
-    font-size: 0.85rem;
-    display: inline-flex; align-items: center; gap: 8px;
+    color: #f2f7f9; border-radius: 999px; padding: 7px 12px;
+    font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px;
   }
   .dot { width: 9px; height: 9px; border-radius: 50%; background: #8a9aa3; }
   .dot.ok { background: #5fe3a1; }
@@ -121,12 +91,9 @@
   .msg {
     position: absolute; left: 14px; right: 14px;
     top: calc(env(safe-area-inset-top, 0px) + 58px);
-    background: rgba(8, 20, 28, 0.82);
-    color: #ffd9d0;
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-size: 0.9rem; line-height: 1.5;
-    display: none;
+    background: rgba(8, 20, 28, 0.85); color: #ffd9d0;
+    border-radius: 12px; padding: 12px 14px;
+    font-size: 0.9rem; line-height: 1.5; display: none;
   }
   .msg.show { display: block; }
   .msg p { margin: 0 0 8px; }
@@ -135,45 +102,52 @@
 
   .panel {
     position: absolute; left: 0; right: 0; bottom: 0;
-    padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
-    background: rgba(8, 20, 28, 0.78);
+    padding: 14px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+    background: rgba(8, 20, 28, 0.8);
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-    color: #f2f7f9;
-    border-radius: 22px 22px 0 0;
-    display: grid;
-    grid-template-columns: 150px 1fr;
-    gap: 16px;
-    align-items: center;
+    color: #f2f7f9; border-radius: 22px 22px 0 0;
+    display: grid; grid-template-columns: 140px 1fr; gap: 12px 16px; align-items: center;
   }
-  .ringwrap { position: relative; width: 150px; height: 150px; }
+  .hint {
+    grid-column: 1 / -1; margin: 0; font-size: 0.95rem; line-height: 1.4;
+    color: #e6f3f7; min-height: 1.4em;
+  }
+  .hint.warn { color: #ffcf6e; font-weight: 600; }
+  .strip {
+    grid-column: 1 / -1; display: flex; gap: 6px; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .strip:empty { display: none; }
+  .strip img {
+    width: 46px; height: 46px; object-fit: cover; border-radius: 8px; flex: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  .ringwrap { position: relative; width: 140px; height: 140px; }
   .ringwrap svg { width: 100%; height: 100%; display: block; }
-  .seg { fill: none; stroke: rgba(255, 255, 255, 0.22); stroke-width: 13; }
-  .seg.seen { stroke: rgba(111, 224, 242, 0.5); }
-  .seg.now { stroke: #6fe0f2; }
+  .seg { fill: none; stroke: rgba(255, 255, 255, 0.2); stroke-width: 13; }
+  .seg.done { stroke: #6fe0f2; }
+  .seg.now { stroke: rgba(255, 255, 255, 0.55); }
+  .seg.done.now { stroke: #b6f3fb; }
   #marker { fill: #fff; stroke: #05090c; stroke-width: 2; }
   .ringtext {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center;
-    pointer-events: none;
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; pointer-events: none;
   }
-  .ringtext strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
-  .ringtext span { font-size: 0.72rem; color: #b9cbd3; max-width: 84px; line-height: 1.25; }
+  .ringtext strong { font-size: 1.45rem; font-variant-numeric: tabular-nums; }
+  .ringtext span { font-size: 0.75rem; color: #b9cbd3; }
 
-  .nums { display: grid; gap: 8px; }
-  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.88rem; color: #c3d3da; }
-  .row b { color: #fff; font-size: 1.15rem; font-variant-numeric: tabular-nums; font-weight: 650; }
-  .ghost {
-    appearance: none;
-    margin-top: 4px;
-    background: transparent;
-    color: #f2f7f9;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font: inherit; font-size: 0.9rem;
-    cursor: pointer;
+  .nums { display: grid; gap: 7px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.86rem; color: #c3d3da; }
+  .row b { color: #fff; font-size: 1.1rem; font-variant-numeric: tabular-nums; font-weight: 650; }
+  .btns { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 4px; }
+  .shoot, .ghost {
+    appearance: none; border-radius: 12px; font: inherit; font-size: 0.95rem;
+    padding: 11px 12px; cursor: pointer;
   }
+  .shoot { background: #6fe0f2; color: #062029; border: 0; font-weight: 700; }
+  .shoot.pause { background: #ffcf6e; }
+  .shoot:disabled { opacity: 0.7; }
+  .ghost { background: transparent; color: #f2f7f9; border: 1px solid rgba(255, 255, 255, 0.4); }
   @media (max-width: 360px) {
     .panel { grid-template-columns: 1fr; justify-items: center; }
     .nums { width: 100%; }
@@ -183,18 +157,18 @@
 <body>
 
 <main class="start" id="start">
-  <h1>Uji kamera dan gyro</h1>
-  <p>Ini langkah pertama aplikasi scan 3D. Kita cek dulu apakah HP-mu bisa menampilkan kamera dan membaca arah putarnya.</p>
+  <h1>Scan 3D: foto otomatis</h1>
+  <p>Aplikasi memotret benda setiap kali kamu bergeser sekitar 15° mengelilinginya. Satu putaran penuh menghasilkan 24 foto.</p>
   <ul class="checks">
-    <li><b>Kamera belakang</b>Akan tampil layar penuh di belakang angka sensor.</li>
-    <li><b>Gyro (sensor gerak)</b>Putar badan mengelilingi sebuah benda sambil mengarahkan HP ke benda itu. Cincin akan terisi sesuai arah yang sudah kamu lewati.</li>
+    <li><b>Siapkan bendanya</b>Taruh di meja dengan cahaya terang dan latar yang tidak polos.</li>
+    <li><b>Jalan pelan mengelilinginya</b>Arahkan HP terus ke benda. Kalau terlalu cepat, foto ditunda supaya tidak buram.</li>
   </ul>
-  <button class="btn" id="go">Mulai kamera dan sensor</button>
-  <p style="font-size:0.85rem">Browser akan meminta izin kamera dan sensor gerak. Pilih Izinkan.</p>
+  <button class="btn" id="go">Buka kamera dan sensor</button>
 </main>
 
 <section id="app" aria-label="Pemindai">
   <video id="cam" playsinline muted autoplay></video>
+  <div id="flash"></div>
 
   <div class="hud-top">
     <div class="chip"><span class="dot" id="dCam"></span><span id="tCam">Kamera: menunggu</span></div>
@@ -203,24 +177,30 @@
   <div class="msg" id="msg" role="status"><p id="mCam"></p><p id="mGyro"></p></div>
 
   <div class="panel">
+    <p class="hint" id="hint" aria-live="polite"></p>
+    <div class="strip" id="strip"></div>
     <div class="ringwrap">
       <svg viewBox="0 0 200 200" aria-hidden="true" id="ring"></svg>
-      <div class="ringtext"><strong id="count">0/24</strong><span>sudut sudah dilewati</span></div>
+      <div class="ringtext"><strong id="count">0/24</strong><span>foto</span></div>
     </div>
     <div class="nums">
-      <div class="row"><span>Putaran dari titik awal</span><b id="vRel">0°</b></div>
+      <div class="row"><span>Putaran</span><b id="vRel">0°</b></div>
       <div class="row"><span>Miring depan-belakang</span><b id="vBeta">0°</b></div>
-      <div class="row"><span>Miring kiri-kanan</span><b id="vGamma">0°</b></div>
       <div class="row"><span>Kecepatan putar</span><b id="vRate">0°/dtk</b></div>
-      <button class="ghost" id="reset">Mulai ulang dari sini</button>
+      <div class="btns">
+        <button class="shoot" id="shoot">Mulai memotret</button>
+        <button class="ghost" id="reset">Hapus dan ulang</button>
+      </div>
     </div>
   </div>
 </section>
 
 <script>
 (function () {
-  var SEG = 24;            // 24 segmen x 15 derajat = 360 derajat
+  var SEG = 24;              // 24 segmen x 15 derajat
   var STEP = 360 / SEG;
+  var MAX_RATE = 60;         // derajat per detik; lebih cepat dari ini foto ditunda
+  var MAX_SIDE = 1600;       // ukuran sisi terpanjang foto (piksel)
   var $ = function (id) { return document.getElementById(id); };
 
   // ---------- Cincin ----------
@@ -250,15 +230,16 @@
   marker.setAttribute('cy', '20');
   ring.appendChild(marker);
 
-  // ---------- Status ----------
+  // ---------- Status dan pesan ----------
   var gyroSeen = false;
+  var camOk = false;
   function setChip(kind, ok, text) {
     $('d' + kind).className = 'dot ' + (ok === true ? 'ok' : ok === false ? 'bad' : '');
     $('t' + kind).textContent = text;
   }
   var embedded = false;
   try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
-  var EMB = 'Halaman ini tampil di dalam bingkai halaman lain, jadi browser memblokir kamera dan sensor. Pasang file ini di hosting sendiri supaya berdiri sendiri.';
+  var EMB = 'Halaman ini tampil di dalam bingkai halaman lain, jadi browser memblokir kamera dan sensor. Buka dari link GitHub Pages-mu.';
   function showMsg(kind, text, code) {
     if (embedded) {
       $('mCam').textContent = EMB;
@@ -268,13 +249,17 @@
     }
     $('msg').className = 'msg show';
   }
+  var hintText = null, hintWarn = null, holdHintUntil = 0;
+  function setHint(text, warn) {
+    if (text === hintText && !!warn === hintWarn) return;
+    hintText = text; hintWarn = !!warn;
+    $('hint').textContent = text;
+    $('hint').className = 'hint' + (warn ? ' warn' : '');
+  }
 
   // ---------- Data sensor ----------
   var latest = { heading: null, beta: 0, gamma: 0, rate: 0 };
   var base = null;
-  var visited = {};
-  var visitedCount = 0;
-
   function norm(a) { return ((a % 360) + 360) % 360; }
 
   function onOrientation(ev) {
@@ -282,15 +267,11 @@
     if (typeof ev.webkitCompassHeading === 'number') h = ev.webkitCompassHeading;
     else if (typeof ev.alpha === 'number') h = norm(360 - ev.alpha);
     if (h === null && typeof ev.beta !== 'number') return;
-    if (!gyroSeen) {
-      gyroSeen = true;
-      setChip('Gyro', true, 'Gyro: aktif');
-    }
+    if (!gyroSeen) { gyroSeen = true; setChip('Gyro', true, 'Gyro: aktif'); }
     latest.heading = h;
     latest.beta = ev.beta || 0;
     latest.gamma = ev.gamma || 0;
   }
-
   function onMotion(ev) {
     var r = ev.rotationRate;
     if (!r) return;
@@ -298,35 +279,126 @@
     latest.rate = Math.sqrt(a * a + b * b + g * g);
   }
 
-  function resetRing() {
-    base = latest.heading;
-    visited = {};
-    visitedCount = 0;
+  // ---------- Pemotretan ----------
+  var photos = {};
+  var photoCount = 0;
+  var shooting = false;
+  var finished = false;
+  var busy = false;
+
+  function videoReady() {
+    var v = $('cam');
+    return camOk && v.videoWidth > 0 && v.readyState >= 2;
   }
 
+  function updateShootBtn() {
+    var b = $('shoot');
+    if (finished) { b.textContent = 'Selesai'; b.className = 'shoot'; b.disabled = true; return; }
+    b.disabled = false;
+    b.textContent = shooting ? 'Jeda' : (photoCount > 0 ? 'Lanjut memotret' : 'Mulai memotret');
+    b.className = 'shoot' + (shooting ? ' pause' : '');
+  }
+
+  function flash() {
+    var f = $('flash');
+    f.className = 'on';
+    setTimeout(function () { f.className = ''; }, 60);
+  }
+
+  function addThumb(p) {
+    var img = document.createElement('img');
+    img.src = p.url;
+    img.alt = 'Foto sudut ' + p.sudut + '°';
+    var strip = $('strip');
+    strip.appendChild(img);
+    strip.scrollLeft = strip.scrollWidth;
+  }
+
+  function capture(idx, rel) {
+    busy = true;
+    var v = $('cam');
+    var w = v.videoWidth, h = v.videoHeight;
+    var scale = Math.min(1, MAX_SIDE / Math.max(w, h));
+    var c = document.createElement('canvas');
+    c.width = Math.round(w * scale);
+    c.height = Math.round(h * scale);
+    c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+    var p = {
+      segmen: idx,
+      sudut: Math.round(rel),
+      miringDepan: Math.round(latest.beta),
+      miringSamping: Math.round(latest.gamma),
+      waktu: Date.now()
+    };
+    c.toBlob(function (blob) {
+      busy = false;
+      if (!blob || photos[idx] || !shooting) return;
+      p.blob = blob;
+      p.url = URL.createObjectURL(blob);
+      photos[idx] = p;
+      photoCount++;
+      addThumb(p);
+      flash();
+      try { if (navigator.vibrate) navigator.vibrate(25); } catch (e) {}
+      if (photoCount >= SEG) {
+        shooting = false;
+        finished = true;
+        updateShootBtn();
+      }
+    }, 'image/jpeg', 0.85);
+  }
+
+  function clearAll() {
+    for (var k in photos) {
+      if (photos[k].url) { try { URL.revokeObjectURL(photos[k].url); } catch (e) {} }
+    }
+    photos = {};
+    photoCount = 0;
+    shooting = false;
+    finished = false;
+    busy = false;
+    base = latest.heading;
+    $('strip').innerHTML = '';
+    updateShootBtn();
+  }
+
+  // ---------- Tampilan tiap frame ----------
   function render() {
-    var rel = 0;
+    var rel = 0, idx = -1;
     if (latest.heading !== null) {
       if (base === null) base = latest.heading;
       rel = norm(latest.heading - base);
-      var idx = Math.min(SEG - 1, Math.floor(rel / STEP));
-      if (!visited[idx]) { visited[idx] = true; visitedCount++; }
-      for (var i = 0; i < SEG; i++) {
-        segs[i].setAttribute('class', 'seg' + (visited[i] ? ' seen' : '') + (i === idx ? ' now' : ''));
-      }
+      idx = Math.min(SEG - 1, Math.floor(rel / STEP));
       var t = (rel - 90) * Math.PI / 180;
       marker.setAttribute('cx', (100 + 80 * Math.cos(t)).toFixed(1));
       marker.setAttribute('cy', (100 + 80 * Math.sin(t)).toFixed(1));
     }
-    $('count').textContent = visitedCount + '/' + SEG;
+    for (var i = 0; i < SEG; i++) {
+      segs[i].setAttribute('class', 'seg' + (photos[i] ? ' done' : '') + (i === idx ? ' now' : ''));
+    }
+
+    var tooFast = latest.rate > MAX_RATE;
+    if (shooting && idx >= 0 && !photos[idx] && !busy && !tooFast && videoReady()) {
+      capture(idx, rel);
+    }
+
+    if (Date.now() < holdHintUntil) { /* biarkan pesan peringatan tampil sebentar */ }
+    else if (finished) setHint('Selesai. 24 foto dari semua sisi sudah terkumpul.');
+    else if (!shooting) setHint(photoCount > 0
+      ? 'Dijeda. Tekan Lanjut memotret untuk meneruskan.'
+      : 'Arahkan HP ke benda, lalu tekan Mulai memotret.');
+    else if (tooFast) setHint('Terlalu cepat. Putar lebih pelan supaya foto tidak buram.', true);
+    else if (photos[idx]) setHint('Sudut ini sudah terfoto. Geser ke bagian cincin yang masih kosong.');
+    else setHint('Jalan pelan mengelilingi benda. Foto diambil otomatis.');
+
+    $('count').textContent = photoCount + '/' + SEG;
     $('vRel').textContent = Math.round(rel) + '°';
     $('vBeta').textContent = Math.round(latest.beta) + '°';
-    $('vGamma').textContent = Math.round(latest.gamma) + '°';
     $('vRate').textContent = Math.round(latest.rate) + '°/dtk';
     requestAnimationFrame(render);
   }
 
-  // ---------- Mulai ----------
+  // ---------- Mulai sensor dan kamera ----------
   async function startSensors() {
     var needsPermission =
       typeof DeviceOrientationEvent !== 'undefined' &&
@@ -341,7 +413,7 @@
         var results = await Promise.all(asks);
         if (results[0] !== 'granted') {
           setChip('Gyro', false, 'Gyro: izin ditolak');
-          showMsg('Gyro', 'Izin sensor gerak ditolak. Di iPhone: tutup halaman ini, buka lagi, lalu pilih Izinkan saat diminta.');
+          showMsg('Gyro', 'Izin sensor gerak ditolak. Tutup halaman ini, buka lagi, lalu pilih Izinkan saat diminta.');
           return;
         }
       }
@@ -351,19 +423,19 @@
       setTimeout(function () {
         if (!gyroSeen) {
           setChip('Gyro', false, 'Gyro: tidak ada data');
-          showMsg('Gyro', 'Sensor gerak tidak mengirim data. Coba buka link ini langsung di Chrome atau Safari, bukan di dalam aplikasi lain, lalu pastikan akses sensor gerak diizinkan.');
+          showMsg('Gyro', 'Sensor gerak tidak mengirim data. Pastikan akses sensor gerak diizinkan di pengaturan situs.');
         }
       }, 2500);
     } catch (e) {
       setChip('Gyro', false, 'Gyro: gagal');
-      showMsg('Gyro', 'Sensor gerak tidak bisa dipakai di browser ini.');
+      showMsg('Gyro', 'Sensor gerak tidak bisa dipakai di browser ini.', e && e.name);
     }
   }
 
   async function startCamera() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setChip('Cam', false, 'Kamera: tidak didukung');
-      showMsg('Cam', 'Browser ini tidak bisa mengakses kamera. Buka link ini di Chrome atau Safari.');
+      showMsg('Cam', 'Browser ini tidak bisa mengakses kamera. Buka di Chrome atau Safari.');
       return;
     }
     try {
@@ -375,13 +447,14 @@
       v.srcObject = stream;
       await v.play();
       v.className = 'live';
+      camOk = true;
       setChip('Cam', true, 'Kamera: aktif');
     } catch (e) {
       setChip('Cam', false, 'Kamera: gagal');
       if (e && e.name === 'NotAllowedError') {
-        showMsg('Cam', 'Izin kamera ditolak. Aktifkan lewat pengaturan situs di browser, lalu muat ulang halaman.', e && e.name);
+        showMsg('Cam', 'Izin kamera ditolak. Aktifkan lewat pengaturan situs di browser, lalu muat ulang halaman.', e.name);
       } else if (e && e.name === 'NotFoundError') {
-        showMsg('Cam', 'Kamera tidak ditemukan di perangkat ini.');
+        showMsg('Cam', 'Kamera tidak ditemukan di perangkat ini.', e.name);
       } else {
         showMsg('Cam', 'Kamera tidak bisa dibuka. Tutup aplikasi lain yang memakai kamera, lalu coba lagi.', e && e.name);
       }
@@ -394,14 +467,26 @@
     $('app').className = 'on';
     setChip('Cam', null, 'Kamera: menunggu izin');
     setChip('Gyro', null, 'Gyro: menunggu izin');
-    // Izin sensor harus diminta langsung dari sentuhan, jadi dipanggil lebih dulu.
-    var s = startSensors();
-    var c = startCamera();
-    Promise.all([s, c]);
+    // Izin sensor diminta langsung dari sentuhan, jadi dipanggil lebih dulu.
+    startSensors();
+    startCamera();
+    updateShootBtn();
     requestAnimationFrame(render);
   });
 
-  $('reset').addEventListener('click', resetRing);
+  $('shoot').addEventListener('click', function () {
+    if (finished) return;
+    if (!shooting && (!videoReady() || latest.heading === null)) {
+      setHint('Kamera atau gyro belum aktif. Lihat tanda di bagian atas layar.', true);
+      holdHintUntil = Date.now() + 3000;
+      return;
+    }
+    if (!shooting && photoCount === 0) base = latest.heading;
+    shooting = !shooting;
+    updateShootBtn();
+  });
+
+  $('reset').addEventListener('click', clearAll);
 })();
 </script>
 </body>
